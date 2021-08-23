@@ -1,0 +1,274 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "fileLocation": {
+      "type": "string"
+    },
+    "_sasToken": {
+      "type": "securestring",
+      "defaultValue": null
+    },
+    "resourceNamePrefix": {
+      "type": "string"
+    },
+    "resourceNameSuffix": {
+      "type": "string"
+    },
+    "_resourceNames": {
+      "type": "object",
+      "defaultValue": {}
+    },
+    "gaUserName": {
+      "type": "string"
+    },
+    "gaPassword": {
+      "type": "securestring"
+    },
+    "githubRepo": {
+      "type": "string",
+      "defaultValue": "Cyb3rWard0g/Cloud-Katana"
+    },
+    "githubUserName": {
+      "type": "string"
+    },
+    "githubPassword": {
+      "type": "securestring"
+    },
+    "assignAppRoleToUser": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "combinedResourceNames": {
+      "AppName": "[tolower(substring(concat(parameters('resourceNamePrefix'), 'CK', parameters('resourceNameSuffix'), '00000000000000000000'), 0, 20))]",
+      "Identity": "[concat(parameters('resourceNamePrefix'), 'CK', parameters('resourceNameSuffix'))]",
+      "ServerAppName": "[concat(parameters('resourceNamePrefix'), 'KatanaServer', parameters('resourceNameSuffix'))]",
+      "ClientAppName": "[concat(parameters('resourceNamePrefix'), 'KatanaClient', parameters('resourceNameSuffix'))]"
+    },
+    "resourceNames": "[if(empty(parameters('_resourceNames')), variables('combinedResourceNames'), parameters('_resourceNames'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deploymentScripts",
+      "apiVersion": "2020-10-01",
+      "name": "createServerApp",
+      "location": "[resourceGroup().location]",
+      "kind": "AzureCLI",
+      "properties": {
+        "environmentVariables": [
+          {
+            "name": "gaUserName",
+            "value": "[parameters('gaUserName')]"
+          },
+          {
+            "name": "gaPassword",
+            "secureValue": "[parameters('gaPassword')]"
+          },
+          {
+            "name": "IdentifierUris",
+            "value": "[concat('https://', variables('resourceNames').AppName, '.azurewebsites.net')]"
+          },
+          {
+            "name": "ReplyUrls",
+            "value": "[concat('https://', variables('resourceNames').AppName, '.azurewebsites.net/.auth/login/aad/callback')]"
+          },
+          {
+            "name": "RequireAssignedRole",
+            "value": true
+          },
+          {
+            "name": "assignAppRoleToUser",
+            "value": "[parameters('assignAppRoleToUser')]"
+          },
+          {
+            "name": "Name",
+            "value": "[variables('resourceNames').ServerAppName]"
+          }
+        ],
+        "AzCliVersion": "2.15.0",
+        "timeout": "PT30M",
+        "primaryScriptUri": "[concat(parameters('fileLocation'), '/resources/scripts/New-AppRegistration.sh', parameters('_sasToken'))]",
+        "cleanupPreference": "OnSuccess",
+        "retentionInterval": "PT1H"
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deploymentScripts",
+      "apiVersion": "2020-10-01",
+      "name": "createClientApp",
+      "location": "[resourceGroup().location]",
+      "kind": "AzureCLI",
+      "properties": {
+        "environmentVariables": [
+          {
+            "name": "gaUserName",
+            "value": "[parameters('gaUserName')]"
+          },
+          {
+            "name": "gaPassword",
+            "secureValue": "[parameters('gaPassword')]"
+          },
+          {
+            "name": "NativeApp",
+            "value": true
+          },
+          {
+            "name": "ReplyUrls",
+            "value": "http://localhost"
+          },
+          {
+            "name": "RequireAssignedRole",
+            "value": true
+          },
+          {
+            "name": "DisableImplicitGrantFlowOAuth2",
+            "value": true
+          },
+          {
+            "name": "assignAppRoleToUser",
+            "value": "[parameters('assignAppRoleToUser')]"
+          },
+          {
+            "name": "Name",
+            "value": "[variables('resourceNames').ClientAppName]"
+          }
+        ],
+        "AzCliVersion": "2.15.0",
+        "timeout": "PT30M",
+        "primaryScriptUri": "[concat(parameters('fileLocation'), '/resources/scripts/New-AppRegistration.sh', parameters('_sasToken'))]",
+        "cleanupPreference": "OnSuccess",
+        "retentionInterval": "PT1H"
+      }
+    },
+    {
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "apiVersion": "2018-11-30",
+      "name": "[variables('resourceNames').Identity]",
+      "location": "[resourceGroup().location]"
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2019-04-01-preview",
+      "name": "[guid(resourceGroup().id, 'identityContributor')]",
+      "dependsOn": [ "[variables('resourceNames').Identity]" ],
+      "properties": {
+        "roleDefinitionId": "[concat(subscription().id, '/providers/Microsoft.Authorization/roleDefinitions/', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+        "principalId": "[reference(variables('resourceNames').Identity, '2018-11-30').principalId]",
+        "principalType": "ServicePrincipal",
+        "scope": "[resourceGroup().id]"
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deploymentScripts",
+      "apiVersion": "2020-10-01",
+      "name": "addGraphPermissions",
+      "dependsOn": [ "[variables('resourceNames').Identity]" ],
+      "location": "[resourceGroup().location]",
+      "kind": "AzureCLI",
+      "properties": {
+        "environmentVariables": [
+          {
+            "name": "gaUserName",
+            "value": "[parameters('gaUserName')]"
+          },
+          {
+            "name": "gaPassword",
+            "secureValue": "[parameters('gaPassword')]"
+          },
+          {
+            "name": "SvcPrincipalId",
+            "value": "[reference(variables('resourceNames').Identity, '2018-11-30').principalId]"
+          },
+          {
+            "name": "PermissionsFile",
+            "value": "[concat(parameters('fileLocation'), '/attackActions/permissions.json', parameters('_sasToken'))]"
+          }
+        ],
+        "AzCliVersion": "2.15.0",
+        "timeout": "PT30M",
+        "primaryScriptUri": "[concat(parameters('fileLocation'), '/resources/scripts/Add-GraphPermissions.sh', parameters('_sasToken'))]",
+        "cleanupPreference": "OnSuccess",
+        "retentionInterval": "PT1H"
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2021-04-01",
+      "name": "DeployFunctionApp",
+      "dependsOn": [ "createServerApp" ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('fileLocation'), '/azuredeploy.json' , parameters('_sasToken'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "serverAppId": {
+            "value": "[reference('createServerApp','2020-10-01').outputs.appId]"
+          },
+          "identityName": {
+            "value": "[variables('resourceNames').Identity]"
+          },
+          "functionAppName": {
+            "value": "[variables('resourceNames').AppName]"
+          },
+          "_packageLocation": {
+            "value": ""
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deploymentScripts",
+      "apiVersion": "2020-10-01",
+      "name": "PublishFunctionApp",
+      "dependsOn": [ "DeployFunctionApp", "createClientApp", "[variables('resourceNames').Identity]" ],
+      "location": "[resourceGroup().location]",
+      "kind": "AzureCLI",
+      "identity": {
+        "type": "userAssigned",
+        "userAssignedIdentities": {
+          "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('resourceNames').Identity)]": {}
+        }
+      },
+      "properties": {
+        "environmentVariables": [
+          {
+            "name": "githubRepo",
+            "value": "[parameters('githubRepo')]"
+          },
+          {
+            "name": "githubUserName",
+            "value": "[parameters('githubUserName')]"
+          },
+          {
+            "name": "githubPassword",
+            "secureValue": "[parameters('githubPassword')]"
+          },
+          {
+            "name": "clientAppId",
+            "value": "[reference('createClientApp','2020-10-01').outputs.appId]"
+          },
+          {
+            "name": "tenantId",
+            "value": "[subscription().tenantId]"
+          },
+          {
+            "name": "deploymentResourceGroupName",
+            "value": "[resourceGroup().name]"
+          },
+          {
+            "name": "AppName",
+            "value": "[variables('resourceNames').AppName]"
+          }
+        ],
+        "AzCliVersion": "2.26.1",
+        "timeout": "PT30M",
+        "primaryScriptUri": "[concat(parameters('fileLocation'), '/resources/scripts/PublishWebApp.sh', parameters('_sasToken'))]",
+        "cleanupPreference": "OnSuccess",
+        "retentionInterval": "PT1H"
+      }
+    }
+  ]
+}
