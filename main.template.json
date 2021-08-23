@@ -7,7 +7,7 @@
     },
     "_sasToken": {
       "type": "securestring",
-      "defaultValue": null
+      "defaultValue": ""
     },
     "resourceNamePrefix": {
       "type": "string"
@@ -27,13 +27,15 @@
     },
     "githubRepo": {
       "type": "string",
-      "defaultValue": "Cyb3rWard0g/Cloud-Katana"
+      "defaultValue": "pgmorozov/Cloud-Catana"
     },
     "githubUserName": {
-      "type": "string"
+      "type": "string",
+      "defaultValue": ""
     },
     "githubPassword": {
-      "type": "securestring"
+      "type": "securestring",
+      "defaultValue": ""
     },
     "assignAppRoleToUser": {
       "type": "string"
