@@ -72,20 +72,20 @@ if [[ $RequireAssignedRole ]]; then
     sleep 10
 fi
 
-if [[ $AssignAppRoleToUser ]]; then
-    echo "[+] Granting app role assignment to $AssignAppRoleToUser "
+if [[ $assignAppRoleToUser ]]; then
+    echo "[+] Granting app role assignment to $assignAppRoleToUser "
     appSp=$(az ad sp show --id $appId)
     spObjectId=$(echo $appSp|jq -r .objectId)
-    principalId=$(az ad user show --id $AssignAppRoleToUser --query 'objectId' -o tsv)
+    principalId=$(az ad user show --id $assignAppRoleToUser --query 'objectId' -o tsv)
     emptyGuid='00000000-0000-0000-0000-000000000000'
     Body="{\"appRoleId\": \"$emptyGuid\", \"principalId\": \"$principalId\", \"resourceId\": \"$spObjectId\"}"
-    existingRole=$(az rest --method get --uri "https://graph.microsoft.com/v1.0/users/$AssignAppRoleToUser/appRoleAssignments" --headers "Content-Type=application/json"|jq ".value|.[]|select(.resourceDisplayName==\"$Name\")")
+    existingRole=$(az rest --method get --uri "https://graph.microsoft.com/v1.0/users/$assignAppRoleToUser/appRoleAssignments" --headers "Content-Type=application/json"|jq ".value|.[]|select(.resourceDisplayName==\"$Name\")")
 	if [[ $existingRole == null ]]; then
-        AssignAppRoleResult=$(az rest --method post --uri "https://graph.microsoft.com/v1.0/users/$AssignAppRoleToUser/appRoleAssignments" --body "$Body" --headers "Content-Type=application/json")
+        AssignAppRoleResult=$(az rest --method post --uri "https://graph.microsoft.com/v1.0/users/$assignAppRoleToUser/appRoleAssignments" --body "$Body" --headers "Content-Type=application/json")
         if [[ !$AssignAppRoleResult ]]; then
-            >&2 echo "Error granting app role assignment to user $AssignAppRoleToUser"
+            >&2 echo "Error granting app role assignment to user $assignAppRoleToUser"
             exit 1
         fi
 	fi
 fi
-echo 1| jq "{appName:\"$Name\", secretName:\"CloudKatanaSecret\", secretText:\"$secret\"}"> $AZ_SCRIPTS_OUTPUT_PATH
+echo 1| jq "{appName:\"$Name\", appId:\"$appId\", secretName:\"CloudKatanaSecret\", secretText:\"$secret\"}"> $AZ_SCRIPTS_OUTPUT_PATH

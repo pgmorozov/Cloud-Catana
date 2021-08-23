@@ -1,6 +1,6 @@
-
+az login -u $gaUserName -p $gaPassword
 # Get Application service principal if service principal name is provided
-If [[ $AppSvcPrincipalName ]]; then
+if [[ $AppSvcPrincipalName ]]; then
     SvcPrincipalId=$(az ad sp list --query "[?appDisplayName=='$($AppSvcPrincipalName)'].objectId" -o tsv --all)
     if [[ $SvcPrincipalId == null ]]; then
         >&2 echo "Error looking for Azure AD application service principal"
@@ -31,16 +31,10 @@ roleAssignments=$(az ad sp show --id $roleSvcAppId --query "appRoles"|jq ".[]|se
 for roleAssignment in $roleAssignments
 do
     body=$(echo $roleAssignment|jq -c "{principalId:\"$SvcPrincipalId\", resourceId:\"$roleSvcAppId\", appRoleId:.}")
-    az rest --method post --uri $Uri --body "$body" --headers "Content-Type=application/json"
+    az rest --method post --uri "https://graph.microsoft.com/v1.0/servicePrincipals/$SvcPrincipalId/appRoleAssignments" --body "$body" --headers "Content-Type=application/json"
 done
 token=$(az account get-access-token --resource-type ms-graph --query accessToken --output tsv)
 
-body = "{
-        \"clientId\":\"$SvcPrincipalId\",
-        \"consentType\": \"AllPrincipals\",
-        \"principalId\": null,
-        \"resourceId\": \"$roleSvcAppId\",
-        \"scope\": \"$delegatedPermissions\"
-    }"|jq -c .
-echo "[+] Granting OAuth permissions: $RequiredPermissions"
+body="{\"clientId\":\"$SvcPrincipalId\",\"consentType\":\"AllPrincipals\",\"principalId\":null,\"resourceId\":\"$roleSvcAppId\",\"scope\":\"delegated\"}"
+
 curl 'https://graph.microsoft.com/v1.0/oauth2PermissionGrants' -H "Authorization: Bearer $token" -H "Content-Type: application/json" -d $body
