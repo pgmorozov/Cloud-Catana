@@ -1,0 +1,18 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "functionAppName": {
+            "value": "<FUNCTION-APP-UNIQUE-NAME"
+        },
+        "serverAppId": {
+            "value": "<KATANA-SERVER-ID>"
+        },
+        "identityName": {
+            "value": "<MANAGED-IDENTITY-NAME"
+        },
+        "_packageLocation": {
+            "value": "<FUNCTION-APP-ZIP-PACKAGE>"
+        }
+    }
+}
