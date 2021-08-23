@@ -1,3 +1,8 @@
+
+
+
+[![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fpgmorozov%2fCloud-Catana%2fmaster%2fmain.template.json)
+
 # Cloud Katana
 
 [![Jupyter Book Badge](https://jupyterbook.org/badge.svg)](https://cloud-katana.com)
