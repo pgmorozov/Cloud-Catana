@@ -4,9 +4,9 @@ else
 	git clone "https://github.com/$githubRepo" -n Cloud-Katana
 fi
 cd Cloud-Katana
-git checkout -f
-git checkout -f
-git checkout -f
+git checkout $githubBranch -f
+git checkout $githubBranch -f
+git checkout $githubBranch -f
 echo "PUBLIC_CLIENT_APP_ID: $clientAppId
 TENANT_ID: $tenantId
 FUNCTION_APP_URL: https://$AppName.azurewebsites.net" > "$AZ_SCRIPTS_PATH_INPUT_DIRECTORY/Cloud-Katana/resources/notebooks/_config.yml"
