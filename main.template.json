@@ -3,8 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "artifactsLocation": {
-      "type": "string",
-      "defaultValue": "https://raw.githubusercontent.com/pgmorozov/Cloud-Catana/master"
+      "type": "string"
     },
     "_sasToken": {
       "type": "securestring",
