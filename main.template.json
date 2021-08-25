@@ -49,7 +49,7 @@
     },
     "githubBranch": {
       "type": "string",
-      "defaultValue": "main"
+      "defaultValue": "master"
     },
     "githubUserName": {
       "type": "string",
