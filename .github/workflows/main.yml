@@ -1,0 +1,19 @@
+name: DeployCloudKatana
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Instal Az CLI
+        run: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+      - name: Run deployment
+        run: |
+          az login -u $azureUserName -p $azurePassword
