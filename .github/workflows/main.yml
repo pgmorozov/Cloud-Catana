@@ -16,22 +16,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Run Azure PowerShell script
-        uses: azure/powershell@v1
-        with:
-          inlineScript: |
-            $pass = ConvertTo-SecureString $env:AZURE_USER -AsPlainText -Force
-            $creds = New-Object PSCredential ($env:AZURE_PASSWORD, $pass)
-            Connect-AzAccount -Credential $creds 
-            
-            New-AzResourceGroupDeployment -ResourceGroupName 'SOC-CK-Play5' `
-                                          -TemplateFile "$env:GITHUB_WORKSPACE/main.template.json" `
-                                          -fileLocation "https://$storageName.blob.core.windows.net/template-files" `
-                                          -resourceNamePrefix 'SOC' `
-                                          -resourceNameSuffix 'Play5' `
-                                          -gaUserName $env:AZURE_USER `
-                                          -gaPassword $pass `
-                                          -githubRepo $env:GITHUB_REPOSITORY `
-                                          -assignAppRoleToUser $env:AZURE_USER `
-                                          -Verbose
-          azPSVersion: 'latest'
+      - name: Run Deployment
+        shell: pwsh
+        run: |
+              Install-Module Az -Force -Confirm:$false
+              $pass = ConvertTo-SecureString $env:AZURE_USER -AsPlainText -Force
+              $creds = New-Object PSCredential ($env:AZURE_PASSWORD, $pass)
+              Connect-AzAccount -Credential $creds 
+
+              New-AzResourceGroupDeployment -ResourceGroupName 'SOC-CK-Play5' `
+                                            -TemplateFile "$env:GITHUB_WORKSPACE/main.template.json" `
+                                            -fileLocation "https://$storageName.blob.core.windows.net/template-files" `
+                                            -resourceNamePrefix 'SOC' `
+                                            -resourceNameSuffix 'Play5' `
+                                            -gaUserName $env:AZURE_USER `
+                                            -gaPassword $pass `
+                                            -githubRepo $env:GITHUB_REPOSITORY `
+                                            -assignAppRoleToUser $env:AZURE_USER `
+                                            -Verbose
