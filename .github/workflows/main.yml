@@ -9,6 +9,10 @@ on:
 
 jobs:
   deploy:
+    environment: Dev
+    env:
+      AZURE_USER: '${{ secrets.AZURE_USER }}'
+      AZURE_PASSWORD: '${{ secrets.AZURE_PASSWORD }}'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -16,8 +20,8 @@ jobs:
         uses: azure/powershell@v1
         with:
           inlineScript: |
-            $pass = ConvertTo-SecureString "${{ secrets.AZURE_USER }}" -AsPlainText -Force
-            $creds = New-Object PSCredential ("${{ secrets.AZURE_PASSWORD }}", $pass)
+            $pass = ConvertTo-SecureString $env:AZURE_USER -AsPlainText -Force
+            $creds = New-Object PSCredential ($env:AZURE_PASSWORD, $pass)
             Connect-AzAccount -Credential $creds 
             
             New-AzResourceGroupDeployment -ResourceGroupName 'SOC-CK-Play5' `
@@ -25,9 +29,9 @@ jobs:
                                           -fileLocation "https://$storageName.blob.core.windows.net/template-files" `
                                           -resourceNamePrefix 'SOC' `
                                           -resourceNameSuffix 'Play5' `
-                                          -gaUserName "${{ secrets.AZURE_USER }}" `
+                                          -gaUserName $env:AZURE_USER `
                                           -gaPassword $pass `
                                           -githubRepo $env:GITHUB_REPOSITORY `
-                                          -assignAppRoleToUser "${{ secrets.AZURE_USER }}" `
+                                          -assignAppRoleToUser $env:AZURE_USER `
                                           -Verbose
           azPSVersion: 'latest'
