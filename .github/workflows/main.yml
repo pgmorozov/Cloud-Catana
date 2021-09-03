@@ -15,11 +15,9 @@ jobs:
       - name: Run Azure PowerShell script
         uses: azure/powershell@v1
         with:
-          azure_user: ${{ secrets.AZURE_USER }}
-          azure_password: ${{ secrets.AZURE_PASSWORD }}
           inlineScript: |
-            $pass = ConvertTo-SecureString "$env:AZURE_USER" -AsPlainText -Force
-            $creds = New-Object PSCredential ("$env:AZURE_PASSWORD", $pass)
+            $pass = ConvertTo-SecureString "${{ secrets.AZURE_USER }}" -AsPlainText -Force
+            $creds = New-Object PSCredential ("${{ secrets.AZURE_PASSWORD }}", $pass)
             Connect-AzAccount -Credential $creds 
             
             New-AzResourceGroupDeployment -ResourceGroupName 'SOC-CK-Play5' `
@@ -27,9 +25,9 @@ jobs:
                                           -fileLocation "https://$storageName.blob.core.windows.net/template-files" `
                                           -resourceNamePrefix 'SOC' `
                                           -resourceNameSuffix 'Play5' `
-                                          -gaUserName "$env:AZURE_USER" `
+                                          -gaUserName "${{ secrets.AZURE_USER }}" `
                                           -gaPassword $pass `
                                           -githubRepo $env:GITHUB_REPOSITORY `
-                                          -assignAppRoleToUser "$env:AZURE_USER" `
+                                          -assignAppRoleToUser "${{ secrets.AZURE_USER }}" `
                                           -Verbose
           azPSVersion: 'latest'
