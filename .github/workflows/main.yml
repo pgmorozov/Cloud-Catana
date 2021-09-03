@@ -29,6 +29,7 @@ jobs:
             {
               New-AzResourceGroup -Name 'SOC-CK-Play5' -Location eastus
             }
+          azPSVersion: "latest"
       - name: Run deployment
         uses: Azure/powershell@v1
         with:
