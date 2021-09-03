@@ -40,3 +40,4 @@ jobs:
                                             -githubRepo $env:GITHUB_REPOSITORY `
                                             -assignAppRoleToUser $env:AZURE_USER `
                                             -Verbose
+          azPSVersion: "latest"
