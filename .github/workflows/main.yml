@@ -21,6 +21,14 @@ jobs:
         with:
           creds: ${{ secrets.DEPLOYMENT_SPN }}
           enable-AzPSSession: true
+      - name: Deploy resource group
+        uses: Azure/powershell@v1
+        with:
+          inlineScript:  |
+            if(!(Get-AzResourceGroup|where ResourceGroupName -eq 'SOC-CK-Play5'))
+            {
+              New-AzResourceGroup -Name 'SOC-CK-Play5' -Location eastus
+            }
       - name: Run deployment
         uses: Azure/powershell@v1
         with:
