@@ -38,7 +38,7 @@ jobs:
 
               New-AzResourceGroupDeployment -ResourceGroupName 'SOC-CK-Play5' `
                                             -TemplateFile "$env:GITHUB_WORKSPACE/main.template.json" `
-                                            -artifactsLocation "https://raw.githubusercontent.com/$env:GITHUB_WORKSPACE/master/main.template.json" `
+                                            -artifactsLocation "https://raw.githubusercontent.com/$env:GITHUB_REPOSITORY/master" `
                                             -resourceNamePrefix 'SOC' `
                                             -resourceNameSuffix 'Play5' `
                                             -gaUserName $env:AZURE_USER `
