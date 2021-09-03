@@ -7,7 +7,7 @@
     },
     "_sasToken": {
       "type": "securestring",
-      "defaultValue": null
+      "defaultValue": ""
     },
     "resourceNamePrefix": {
       "type": "string",
