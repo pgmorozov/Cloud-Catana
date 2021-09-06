@@ -30,6 +30,10 @@ jobs:
               New-AzResourceGroup -Name "$env:RESOURCE_NAME_PREFIX-CK-$env:RESOURCE_NAME_SUFFIX" -Location eastus
             }
           azPSVersion: "latest"
+      - name: Extract branch name
+        shell: bash
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+        id: extract_branch
       - name: Run deployment
         uses: Azure/powershell@v1
         with:
@@ -38,7 +42,7 @@ jobs:
 
               New-AzResourceGroupDeployment -ResourceGroupName "$env:RESOURCE_NAME_PREFIX-CK-$env:RESOURCE_NAME_SUFFIX" `
                                             -TemplateFile "$env:GITHUB_WORKSPACE/main.template.json" `
-                                            -artifactsLocation "https://raw.githubusercontent.com/$env:GITHUB_REPOSITORY/master" `
+                                            -artifactsLocation "https://raw.githubusercontent.com/$env:GITHUB_REPOSITORY/${{ steps.extract_branch.outputs.branch }}" `
                                             -resourceNamePrefix $env:RESOURCE_NAME_PREFIX `
                                             -resourceNameSuffix $env:RESOURCE_NAME_SUFFIX `
                                             -gaUserName $env:AZURE_USER `
