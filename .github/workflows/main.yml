@@ -3,8 +3,6 @@ name: DeployCloudKatana
 on:
   push:
     branches: [ master ]
-  pull_request:
-    branches: [ master ]
   workflow_dispatch:
 
 jobs:
@@ -13,6 +11,8 @@ jobs:
     env:
       AZURE_USER: '${{ secrets.AZURE_USER }}'
       AZURE_PASSWORD: '${{ secrets.AZURE_PASSWORD }}'
+      RESOURCE_NAME_PREFIX: 'SOC'
+      RESOURCE_NAME_SUFFIX: 'Play5'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -25,22 +25,22 @@ jobs:
         uses: Azure/powershell@v1
         with:
           inlineScript:  |
-            if(!(Get-AzResourceGroup|where ResourceGroupName -eq 'SOC-CK-Play5'))
+            if(!(Get-AzResourceGroup|where ResourceGroupName -eq "$env:RESOURCE_NAME_PREFIX-CK-$env:RESOURCE_NAME_SUFFIX"))
             {
-              New-AzResourceGroup -Name 'SOC-CK-Play5' -Location eastus
+              New-AzResourceGroup -Name "$env:RESOURCE_NAME_PREFIX-CK-$env:RESOURCE_NAME_SUFFIX" -Location eastus
             }
           azPSVersion: "latest"
       - name: Run deployment
         uses: Azure/powershell@v1
         with:
           inlineScript:  |
-              $pass = ConvertTo-SecureString $env:AZURE_USER -AsPlainText -Force
+              $pass = ConvertTo-SecureString $env:AZURE_PASSWORD -AsPlainText -Force
 
-              New-AzResourceGroupDeployment -ResourceGroupName 'SOC-CK-Play5' `
+              New-AzResourceGroupDeployment -ResourceGroupName "$env:RESOURCE_NAME_PREFIX-CK-$env:RESOURCE_NAME_SUFFIX" `
                                             -TemplateFile "$env:GITHUB_WORKSPACE/main.template.json" `
                                             -artifactsLocation "https://raw.githubusercontent.com/$env:GITHUB_REPOSITORY/master" `
-                                            -resourceNamePrefix 'SOC' `
-                                            -resourceNameSuffix 'Play5' `
+                                            -resourceNamePrefix $env:RESOURCE_NAME_PREFIX `
+                                            -resourceNameSuffix $env:RESOURCE_NAME_SUFFIX `
                                             -gaUserName $env:AZURE_USER `
                                             -gaPassword $pass `
                                             -githubRepo $env:GITHUB_REPOSITORY `
